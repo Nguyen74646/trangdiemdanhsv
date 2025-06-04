@@ -17,6 +17,8 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     && docker-php-ext-configure gd --enable-gd \
     && docker-php-ext-install -j$(nproc) gd zip pdo pdo_mysql mbstring xml \
+    && pecl install mongodb \
+    && docker-php-ext-enable mongodb \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Composer
