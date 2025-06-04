@@ -1,7 +1,8 @@
 FROM php:8.1-fpm
 
-# Cài các gói hệ thống cần thiết
-RUN apt-get update && apt-get install -y \
+# Cập nhật và cài đặt các gói hệ thống
+RUN apt-get update \
+    && apt-get install -y --fix-missing \
     apt-utils \
     libpng-dev \
     libjpeg62-turbo-dev \
@@ -17,11 +18,15 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     build-essential \
     libpcre3-dev \
-    && docker-php-ext-configure gd --enable-gd \
-    && docker-php-ext-install -j$(nproc) gd zip pdo pdo_mysql mbstring xml intl bcmath json \
-    && pecl install mongodb-1.12.0 \
-    && docker-php-ext-enable mongodb \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Cấu hình và cài đặt tiện ích mở rộng PHP
+RUN docker-php-ext-configure gd --enable-gd \
+    && docker-php-ext-install -j$(nproc) gd zip pdo pdo_mysql mbstring xml intl bcmath json
+
+# Cài đặt và kích hoạt mongodb
+RUN pecl install mongodb-1.11.0 \
+    && docker-php-ext-enable mongodb
 
 # Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -33,12 +38,12 @@ COPY . .
 # Đảm bảo .env.example tồn tại
 RUN if [ -f ".env.example" ]; then cp .env.example .env; else echo "Error: .env.example not found" && exit 1; fi
 
-# Cài đặt thư viện PHP với --ignore-platform-reqs
+# Cài đặt thư viện PHP
 RUN composer install --optimize-autoloader --no-dev --ignore-platform-reqs
 
 # Phân quyền
 RUN chown -R www-data:www-data /var/www \
-    && chmod -r 775 /var/www/storage
+    && chmod -R 775 /var/www/storage
 
 EXPOSE 9000
 CMD ["php-fpm"]
