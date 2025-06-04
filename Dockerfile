@@ -5,15 +5,16 @@ RUN apt-get update \
     && apt-get install -y \
     libzip-dev \
     unzip \
+    nginx \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Cài extension zip (chỉ thử với 1 extension trước)
+# Cài extension zip
 RUN docker-php-ext-install -j$(nproc) zip
 
 # Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Làm việc trong thư mục project
+# Sao chép mã nguồn
 WORKDIR /var/www
 COPY . .
 
@@ -27,5 +28,11 @@ RUN composer install --optimize-autoloader --no-dev --ignore-platform-reqs
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 775 /var/www/storage
 
-EXPOSE 9000
-CMD ["php-fpm"]
+# Cấu hình Nginx
+COPY nginx.conf /etc/nginx/sites-available/default
+
+# Mở cổng 80
+EXPOSE 80
+
+# Chạy PHP-FPM và Nginx
+CMD service php8.1-fpm start && nginx -g "daemon off;"
