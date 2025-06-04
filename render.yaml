@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: trangdiemdanhsv
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_CONNECTION
+        value: mongodb
+      - key: DB_HOST
+        value: cluster0.7tkc6dm.mongodb.net
+      - key: DB_PORT
+        value: 27017
+      - key: DB_DATABASE
+        value: diemDanhSV
+      - key: DB_USERNAME
+        value: duanho74646
+      - key: DB_PASSWORD
+        value: duanho
+      - key: APP_URL
+        value: https://trangdiemdanhsv.onrender.com
