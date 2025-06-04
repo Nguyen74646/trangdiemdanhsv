@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     pkg-config \
     && docker-php-ext-configure gd --enable-gd \
-    && docker-php-ext-install -j$(nproc) gd zip pdo pdo_mysql mbstring xml intl bcmath \
+    && docker-php-ext-install -j$(nproc) gd zip pdo pdo_mysql mbstring xml intl bcmath json \
     && pecl install mongodb \
     && docker-php-ext-enable mongodb \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -29,10 +29,10 @@ WORKDIR /var/www
 COPY . .
 
 # Đảm bảo .env.example tồn tại
-RUN cp .env.example .env || true
+RUN if [ -f ".env.example" ]; then cp .env.example .env; else echo "Error: .env.example not found" && exit 1; fi
 
-# Cài đặt thư viện PHP
-RUN composer install --optimize-autoloader --no-dev
+# Cài đặt thư viện PHP với --ignore-platform-reqs
+RUN composer install --optimize-autoloader --no-dev --ignore-platform-reqs
 
 # Phân quyền
 RUN chown -R www-data:www-data /var/www \
