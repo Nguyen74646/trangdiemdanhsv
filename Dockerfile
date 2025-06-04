@@ -1,40 +1,44 @@
-# Use the official PHP image with Apache
-FROM php:8.2-apache
+FROM php:8.2-fpm
 
-# Install system dependencies
+# Cài các package cần thiết
 RUN apt-get update && apt-get install -y \
-    git unzip zip curl libzip-dev libpng-dev libonig-dev \
-    libxml2-dev libcurl4-openssl-dev pkg-config libssl-dev \
-    && docker-php-ext-install pdo pdo_mysql zip
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    unzip \
+    git \
+    curl \
+    libonig-dev \
+    libxml2-dev \
+    libssl-dev \
+    libcurl4-openssl-dev \
+    pkg-config \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd zip pdo pdo_mysql
 
-# Install MongoDB extension
-RUN pecl install mongodb && docker-php-ext-enable mongodb
+# Cài ext MongoDB (nếu bạn dùng MongoDB)
+RUN pecl install mongodb \
+    && docker-php-ext-enable mongodb
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# Cài Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory
-WORKDIR /var/www/html
+# Set thư mục làm việc
+WORKDIR /var/www
 
-# Copy Laravel app source
+# Copy project vào container
 COPY . .
-
-# Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Cài Laravel dependencies
 RUN composer install --optimize-autoloader --no-dev
 
-# Cài Node.js và build frontend (Vite, Tailwind, ...)
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install \
-    && npm run build || true
+# Cấp quyền cho Laravel
+RUN chown -R www-data:www-data /var/www \
+    && chmod -R 755 /var/www
 
-# Laravel permission
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
-
-# Expose port 80
-EXPOSE 80
+EXPOSE 9000
+CMD ["php-fpm"]
