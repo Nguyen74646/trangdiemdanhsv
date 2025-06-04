@@ -1,27 +1,14 @@
 FROM php:8.1-fpm
 
-# Cập nhật và cài đặt các gói hệ thống
+# Cài các gói cơ bản
 RUN apt-get update \
-    && apt-get install -y --fix-missing \
-    apt-utils \
+    && apt-get install -y \
     libzip-dev \
     unzip \
-    git \
-    curl \
-    libonig-dev \
-    libxml2-dev \
-    libssl-dev \
-    libcurl4-openssl-dev \
-    pkg-config \
-    build-essential \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Cài đặt các extension PHP cần thiết (bỏ gd tạm thời)
-RUN docker-php-ext-install -j$(nproc) zip pdo pdo_mysql mbstring xml intl bcmath json
-
-# Bỏ qua mongodb extension nếu không cần thiết
-# RUN pecl install mongodb-1.11.0 \
-#     && docker-php-ext-enable mongodb
+# Cài extension zip (chỉ thử với 1 extension trước)
+RUN docker-php-ext-install -j$(nproc) zip
 
 # Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
