@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     pkg-config \
     && docker-php-ext-configure gd --enable-gd \
-    && docker-php-ext-install -j$(nproc) gd zip pdo pdo_mysql mbstring tokenizer xml \
+    && docker-php-ext-install -j$(nproc) gd zip pdo pdo_mysql mbstring xml \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Composer
