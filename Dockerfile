@@ -6,7 +6,6 @@ RUN apt-get update \
     libzip-dev \
     unzip \
     nginx \
-    supervisor \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Cài extension zip
@@ -32,11 +31,14 @@ RUN composer install --optimize-autoloader --no-dev --ignore-platform-reqs
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 775 /var/www/storage
 
-# Cấu hình supervisor
-COPY supervisor.conf /etc/supervisor/conf.d/supervisor.conf
+# Tạo script khởi động
+RUN echo '#!/bin/sh\n\
+/usr/local/sbin/php-fpm -y /usr/local/etc/php-fpm.conf -F &\n\
+nginx -g "daemon off;"' > /start.sh \
+    && chmod +x /start.sh
 
-# Mở cổng động
-EXPOSE ${PORT:-80}
+# Mở cổng động (Render cung cấp PORT, mặc định 10000)
+EXPOSE $PORT
 
-# Chạy supervisor
-CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisor.conf"]
+# Chạy script khởi động
+CMD ["/start.sh"]
