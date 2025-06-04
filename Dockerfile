@@ -6,6 +6,7 @@ RUN apt-get update \
     libzip-dev \
     unzip \
     nginx \
+    supervisor \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Cài extension zip
@@ -18,6 +19,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www
 COPY . .
 
+# Sao chép nginx.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 # Đảm bảo .env.example tồn tại
 RUN if [ -f ".env.example" ]; then cp .env.example .env; else echo "Error: .env.example not found" && exit 1; fi
 
@@ -28,11 +32,11 @@ RUN composer install --optimize-autoloader --no-dev --ignore-platform-reqs
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 775 /var/www/storage
 
-# Cấu hình Nginx
-COPY nginx.conf /etc/nginx/sites-available/default
+# Cấu hình supervisor
+COPY supervisor.conf /etc/supervisor/conf.d/supervisor.conf
 
-# Mở cổng 80
-EXPOSE 80
+# Mở cổng động
+EXPOSE ${PORT:-80}
 
-# Chạy PHP-FPM và Nginx
-CMD service php8.1-fpm start && nginx -g "daemon off;"
+# Chạy supervisor
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisor.conf"]
