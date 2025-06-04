@@ -1,6 +1,7 @@
 FROM php:8.2-fpm
 
 RUN apt-get update && apt-get install -y \
+    apt-utils \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
@@ -15,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd zip pdo pdo_mysql mbstring tokenizer xml
+
 
 RUN pecl install mongodb && docker-php-ext-enable mongodb
 
